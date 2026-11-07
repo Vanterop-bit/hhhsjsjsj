@@ -9,7 +9,7 @@ from aiogram.types import Message, CallbackQuery, ErrorEvent, InlineKeyboardMark
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
-TOKEN = "9229716042:AAEQegQ6fNeZk5iLMwV2Ygt_77S-Dg7wZKk"
+TOKEN = "9115876932:AAGat5WlGJ4pjAvqRBtQGq_ThJrEPbHqOGA"
 OWNER_ID = 8567408555
 ADMIN_CODE = "admin777"
 OWNER_CODE = "2427"
